@@ -1,1 +1,7 @@
+asio-1.18.1/
 boost_asio_1_18_1/
+.vscode/
+.vs/
+*Debug
+*vcxproj*
+*sln
