@@ -1,1 +1,2 @@
+https://www.youtube.com/watch?v=2hNdkYInj4g&ab_channel=javidx9
 follow youtuber javidx9 to use ASIO to create a portable, reusable, simple and flexible framework for general purpose client/server applications in C++. This video shows how to setup ASIO, then explores some of the challenges networking presents in general, before outlining the framework and starting to implement the basic components of it. Ultimately this series will yield a simple MMO game.
