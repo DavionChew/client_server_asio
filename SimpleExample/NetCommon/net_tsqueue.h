@@ -48,6 +48,22 @@ namespace olc {
 				return deqQueue.size();
 			}
 
+			// Clears Queue
+			void clear()
+			{
+				std::scoped_lock lock(muxQueue);
+				deqQueue.clear();
+			}
+
+			void wait()
+			{
+				while (empty())
+				{
+					std::unique_lock<std::mutex> ul(muxBlocking);
+					cvBlocking.wait(ul);
+				}
+			}
+
 			// Removes and returns item from front of Queue
 			T pop_front() {
 				std::scoped_lock lock(muxQueue);
@@ -67,6 +83,8 @@ namespace olc {
 		protected:
 			std::mutex muxQueue;
 			std::deque<T> deqQueue;
+			std::condition_variable cvBlocking;
+			std::mutex muxBlocking;
 		};
 	}
 }
