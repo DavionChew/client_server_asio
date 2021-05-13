@@ -81,12 +81,52 @@ namespace olc {
 
 			//Send a message to a specific client
 			void MessageClient(std::shared_ptr<connection<T>> client, const message<T>& msg) {
-				
+				if (client && client->IsConnected()) {
+					client->Send(msg);
+				}
+				else {
+					OnClientDisconnect(client);
+					client.reset();
+					m_deqConnections.erase(
+						std::remove(m_deqConnections.begin(), m_deqConnections.end(), client), m_deqConnections.end());
+				}
 			}
 
 			//Send message to all clients
 			void MessageAllClients(const message<T>& msg, std::shared_ptr<connection<T>> pIgnoreClient = nullptr) {
+				bool bInvalidClientExists = false;
 
+				for (auto& client : m_deqConnections) {
+					//Check client is connected...
+					if (client && client->IsConnected()) {
+						//..it is!
+						if (client != pIgnoreClient)
+							client->Send(msg);
+					}
+					else {
+						//The client couldnt be contacted, so assume it has disconnected.
+						OnClientConnect(client);
+						client.reset();
+						bInvalidClientExists = true;
+					}
+				}
+
+				if (bInvalidClientExists)
+					m_deqConnections.erase(
+						std::remove(m_deqConnections.begin(), m_deqConnections.end(), nullptr), m_deqConnections.end());
+			}
+
+			void Update(size_t nMaxMessages = -1) {
+				size_t nMessageCount = 0;
+				while (nMessageCount < nMaxMessages && !m_qMessagesIn.empty()) {
+					//Grab the front message
+					auto msg = m_qMessagesIn.pop_front();
+
+					//Pass to message handler
+					OnMessage(msg.remote, msg.msg);
+
+					nMessageCount++;
+				}
 			}
 
 		protected:
