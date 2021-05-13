@@ -1,2 +1,4 @@
 https://www.youtube.com/watch?v=2hNdkYInj4g&ab_channel=javidx9
 follow youtuber javidx9 to use ASIO to create a portable, reusable, simple and flexible framework for general purpose client/server applications in C++. This video shows how to setup ASIO, then explores some of the challenges networking presents in general, before outlining the framework and starting to implement the basic components of it. Ultimately this series will yield a simple MMO game.
+
+Issue 1: for anyone getting an error on the std::scoped_lock usage along the lines of scoped_lock use of dependent type name must be prefixed with 'typename', you need to be using Visual Studio 2019, retarget the entire solution to the current version of the Windows SDK, and make sure every project is set to use C++17, not default, in their project settings.
