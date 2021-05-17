@@ -22,6 +22,12 @@ public:
 		msg << timeNow;
 		Send(msg);
 	}
+
+	void MessageAll() {
+		olc::net::message<CustomMsgTypes> msg;
+		msg.header.id = CustomMsgTypes::MessageAll;
+		Send(msg);
+	}
 };
 
 int main() {
@@ -49,11 +55,25 @@ int main() {
 				auto msg = c.Incoming().pop_front().msg;
 
 				switch (msg.header.id) {
+					case CustomMsgTypes::ServerAccept: {
+						// Server has responded to a ping request
+						std::cout << "Server Accepted Connection\n";
+					}
+						break;
+
 					case CustomMsgTypes::ServerPing: {
 						std::chrono::system_clock::time_point timeNow = std::chrono::system_clock::now();
 						std::chrono::system_clock::time_point timeThen;
 						msg >> timeThen;
 						std::cout << "Ping: " << std::chrono::duration<double>(timeNow - timeThen).count() << "\n";
+					}
+						break;
+
+					case CustomMsgTypes::ServerMessage: {
+						// Server has responded to a ping request
+						uint32_t clientID;
+						msg >> clientID;
+						std::cout << "Hello from [" << clientID << "]\n";
 					}
 						break;
 				}

@@ -23,13 +23,17 @@ public:
 protected:
 	virtual bool OnClientConnect(std::shared_ptr<olc::net::connection<CustomMsgTypes>> client)
 	{
+		olc::net::message<CustomMsgTypes> msg;
+		msg.header.id = CustomMsgTypes::ServerAccept;
+		client->Send(msg);
+
 		return true;
 	}
 
 	// Called when a client appears to have disconnected
 	virtual void OnClientDisconnect(std::shared_ptr<olc::net::connection<CustomMsgTypes>> client)
 	{
-
+		std::cout << "Removing client [" << client->GetID() << "]\n";
 	}
 
 	// Called when a message arrives
@@ -41,6 +45,15 @@ protected:
 
 				// Simply bounce message back to client
 				client->Send(msg);
+			}
+				break;
+
+			case CustomMsgTypes::MessageAll: {
+				std::cout << "[" << client->GetID() << "]: Message All\n";
+				olc::net::message<CustomMsgTypes> msg;
+				msg.header.id = CustomMsgTypes::ServerMessage;
+				msg << client->GetID();
+				MessageAllClients(msg, client);
 			}
 				break;
 		}
