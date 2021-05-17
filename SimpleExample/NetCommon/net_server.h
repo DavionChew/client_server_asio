@@ -57,11 +57,11 @@ namespace olc {
 									m_asiocontext, std::move(socket), m_qmessagesin);
 
 							//Give the user server a chance to deny connection
-							if (onclientconnect(newconn)) {
+							if (OnClientConnect(newconn)) {
 								//connection allowed, so add to container of new connections
 								m_deqconnections.push_back(std::move(newconn));
 
-								m_deqconnections.back()->connecttoclient(nidcounter++);
+								m_deqconnections.back()->connecttoclient(nIDCounter++);
 
 								std::cout << "[" << m_deqconnections.back()->getid() << "] connection approved\n";
 							}
