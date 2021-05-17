@@ -132,7 +132,7 @@ namespace olc {
 
 			// ASYNC - Prime context to write a message bidy
 			void WriteBody() {
-				asio::async_write(m_socket, asio::buffer(m_qMessagesOut.front().body.data(), m_qMessagesOut.body.size()),
+				asio::async_write(m_socket, asio::buffer(m_qMessagesOut.front().body.data(), m_qMessagesOut.front().body.size()),
 					[this](std::error_code ec, std::size_t length) {
 						if (!ec) {
 							m_qMessagesOut.pop_front();

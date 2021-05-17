@@ -35,7 +35,15 @@ protected:
 	// Called when a message arrives
 	virtual void OnMessage(std::shared_ptr<olc::net::connection<CustomMsgTypes>> client, olc::net::message<CustomMsgTypes>& msg)
 	{
-		
+		switch (msg.header.id) {
+			case CustomMsgTypes::ServerPing: {
+				std::cout << "[" << client->GetID() << "]: Server Ping\n";
+
+				// Simply bounce message back to client
+				client->Send(msg);
+			}
+				break;
+		}
 	}
 };
 
