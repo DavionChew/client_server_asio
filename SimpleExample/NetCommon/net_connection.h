@@ -45,6 +45,92 @@ namespace olc {
 		public:
 			bool Send(const message<T>& msg);
 
+		private:
+			// ASYNC - Prime context ready to read a message header
+			void ReadHeader() {
+				asio::async_read(m_socket, asio::buffer(&m_msgTemporaryIn.header, sizeof(message_header<T>)),
+					[this](std::error_code ec, std::size_t length) {
+						if (!ec) {
+							if (m_msgTemporaryIn.header.size > 0) {
+								m_msgTemporaryIn.body.resize(m_msgTemporaryIn.header.size);
+								ReadBody();
+							}
+							else {
+								AddToIncomingMessageQueue();
+							}
+
+						}
+						else {
+							std::cout << "[" << id << "] Read Header Fail.\n";
+							m_socket.close();
+						}
+					});
+			}
+
+			// ASYNC - Prime context ready to read a message body
+			void ReadBody() {
+				asio::async_read(m_socket, asio::buffer(m_msgTemporaryIn.body.data(), m_msgTemporaryIn.body.size()),
+					[this](std::error_code ec, std::size_t length) {
+						if (!ec) {
+							AddToIncomingMessageQueue();
+						}
+						else {
+							std::cout << "[" << id << "] Read Body Fail.\n";
+							m_socket.close();
+						}
+					});
+			}
+
+			// ASYNC - Prime context to write a message header
+			void WriteHeader() {
+				asio::async_write(m_socket, asio::buffer(&m_qMessagesOut.front().header, sizeof(message_header<T>)),
+					[this](std::error_code ec, std::size_t length) {
+						if (!ec) {
+							if (m_qMessageOut.front().body.size() > 0) {
+								WriteBody();
+							}
+							else {
+								m_qMessagesOut.pop_front();
+
+								if (!m_qMessagesOut.empty()) {
+									WriteHeader();
+								}
+							}
+						}
+						else {
+							std::cout << "[" << id << "] Write Header Fail.\n";
+							m_socket.close();
+						}
+					});
+			}
+
+			// ASYNC - Prime context to write a message bidy
+			void WriteBody() {
+				asio::async_write(m_socket, asio::buffer(m_qMessagesOut.front().body.data(), m_qMessagesOut.body.size()),
+					[this](std::error_code ec, std::size_t length) {
+						if (!ec) {
+							m_qMessagesOut.pop_front();
+
+							if (!m_qMessagesOut.empty()) {
+								WriteHeader();
+							}
+						}
+						else {
+							std::cout << "[" << id << "] Write Body Fail.\n";
+							m_socket.close();
+						}
+					});
+			}
+
+			void AddToIncomingMessageQueue() {
+				if (m_nOwnerType == owner::server)
+					m_qMessagesIn.push_back({ this->shared_from_this(), m_msgTemporaryIn });
+				else
+					m_qMessagesIn.push_back({ nullptr, m_msgTemporaryIn });
+
+				ReadHeader();
+			}
+
 		protected:
 			// Each connect has a unique socket to a remote
 			asio::ip::tcp::socket m_socket;
@@ -59,6 +145,7 @@ namespace olc {
 			// of this connection. Note it is a reference as the "owner" of this connection
 			// is expected to provide a queue
 			tsqueue<owned_message<T>>& m_qMessagesIn;
+			message<T> m_msgTemporaryIn;
 
 			// The "owner" decides how some of the connection behaves
 			owner m_nOwnerType = owner::server;
