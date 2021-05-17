@@ -31,19 +31,34 @@ namespace olc {
 				if (m_nOwnerType == owner::server) {
 					if (m_socket.is_open()) {
 						id = uid;
+						ReadHeader();
 					}
 				}
 			}
 
 			bool ConnectToServer();
-			bool Disconnect();
+
+			void Disconnect() {
+				if (IsConnected()) {
+					asio::post(m_asioContext, [this]() { m_socket.close(); });
+				}
+			}
 
 			bool IsConnected() const {
 				return m_socket.is_open();
 			}
 
 		public:
-			bool Send(const message<T>& msg);
+			void Send(const message<T>& msg) {
+				asio::post(m_asioContext,
+					[this, msg]() {
+						bool bWritingMessage = !m_qMessagesOut.empty();
+						m_qMessagesOut.push_back(msg);
+						if (!bWritingMessage) {
+							WriteHeader();
+						}
+					});
+			}
 
 		private:
 			// ASYNC - Prime context ready to read a message header
