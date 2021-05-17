@@ -10,7 +10,6 @@ enum class CustomMsgTypes : uint32_t {
 };
 
 class CustomClient : public olc::net::client_interface<CustomMsgTypes> {
-public:
 	
 };
 

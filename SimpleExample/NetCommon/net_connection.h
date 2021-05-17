@@ -112,7 +112,7 @@ namespace olc {
 				asio::async_write(m_socket, asio::buffer(&m_qMessagesOut.front().header, sizeof(message_header<T>)),
 					[this](std::error_code ec, std::size_t length) {
 						if (!ec) {
-							if (m_qMessageOut.front().body.size() > 0) {
+							if (m_qMessagesOut.front().body.size() > 0) {
 								WriteBody();
 							}
 							else {
