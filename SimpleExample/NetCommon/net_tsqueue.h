@@ -28,12 +28,18 @@ namespace olc {
 			void push_back(const T& item) {
 				std::scoped_lock lock(muxQueue);
 				deqQueue.emplace_back(std::move(item));
+
+				std::unique_lock<std::mutex> ul(muxBlocking);
+				cvBlocking.notify_one();
 			}
 
 			//Adds an item to front of Queue
 			void push_front(const T& item) {
 				std::scoped_lock lock(muxQueue);
 				deqQueue.emplace_front(std::move(item));
+
+				std::unique_lock<std::mutex> ul(muxBlocking);
+				cvBlocking.notify_one();
 			}
 
 			// Return true if Queue has no items
@@ -55,15 +61,6 @@ namespace olc {
 				deqQueue.clear();
 			}
 
-			void wait()
-			{
-				while (empty())
-				{
-					std::unique_lock<std::mutex> ul(muxBlocking);
-					cvBlocking.wait(ul);
-				}
-			}
-
 			// Removes and returns item from front of Queue
 			T pop_front() {
 				std::scoped_lock lock(muxQueue);
@@ -80,9 +77,17 @@ namespace olc {
 				return t;
 			}
 
+			void wait() {
+				while (empty()) {
+					std::unique_lock<std::mutex> ul(muxBlocking);
+					cvBlocking.wait(ul);
+				}
+			}
+
 		protected:
 			std::mutex muxQueue;
 			std::deque<T> deqQueue;
+
 			std::condition_variable cvBlocking;
 			std::mutex muxBlocking;
 		};
