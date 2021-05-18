@@ -6,6 +6,10 @@
 
 namespace olc {
 	namespace net {
+		// Forward declare
+		template<typename T>
+		class server_interface;
+
 		template<typename T>
 		class connection : public std::enable_shared_from_this<connection<T>> {
 		public:
@@ -41,7 +45,7 @@ namespace olc {
 			}
 
 		public:
-			void ConnectToClient(uint32_t uid = 0) {
+			void ConnectToClient(olc::net::server_interface<T>* server, uint32_t uid = 0) {
 				if (m_nOwnerType == owner::server) {
 					if (m_socket.is_open()) {
 						id = uid;
